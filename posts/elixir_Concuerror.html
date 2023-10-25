@@ -1,0 +1,187 @@
+
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Concurrency Testing w/ Concuerror - r4z4 Site</title>
+    <link rel="stylesheet" href="/serum/assets/css/style.css">
+    <link rel="stylesheet" href="/serum/assets/css/home_animation.css">
+    <link rel="stylesheet" href="/serum/assets/css/markdown.css">
+  </head>
+  <body>
+    
+<div id="navbar_div">
+  <ul id="navbar">
+    <li><a href="/serum/index.html">Home</a></li>
+    <li><a href="/serum/posts">Posts</a></li>
+  </ul>
+</div>
+
+    <h1 class="base-header"><a href="/serum/">Various Writings and Observations</a></h1>
+    <section class="md-body"><h1 id="concurrency-testing-w/-concuerror">Concurrency Testing w/ Concuerror</h1><p>Posted on Wednesday, 16 Aug 2023 by r4z4</p><p>Tags:</p><ul><li><a href="/serum/tags/concurrency">concurrency</a></li><li><a href="/serum/tags/elixir">elixir</a></li><li><a href="/serum/tags/erlang">erlang</a></li><li><a href="/serum/tags/testing">testing</a></li></ul><p><img src="/assets/images/elixir/Concuerror.png#md-img-bright" alt="png"/></p><hr class="thin"/><p>Continuing with the theme of just being different, for better or worse, Erlang also gives us a good opportunity to explore two other, more obscure in my experience, methods of testing in Property Based Testing and also Concurrency Testing. I had no prior experience with either and they were both rather interesting to look into.</p><hr class="thin"/><p>Property Based testing really originated with Haskell and the QuickCheck implementation and seems that most other implementations in other languages, including Erlang, just follow this approach. The difficulty that I have had here is just finding what I would need to test in this manner. It is just a little different way of thinking about the testing so it does not fit well for all cases.</p><hr class="thin"/><p>Concurrency testing was also completely new to me, but I certainly understood the need and importance of this. But unlike property based testing, it was the actual implementation and internals of how it works that evaded me. 
+I fully intended this to kind of be a one off and just to try it, but I actually think it might offer quite a but as I go and add more features to the system. If you think about it, the whole reason to choose to use this whole ecosystem is for the concurrency offerings so this is just another one of those tools that can help. It is just a matter of getting used to it and learning the new terms etc.</p><hr class="thin"/><p>On that note, the <a href="https://www.concuerror.com">Concuerror</a> site does have some pretty good tutorials which are helpful to walk through some of the initial stages. Here they describe a few of the terms and values to look out for in a typical report:</p><hr class="thin"/><hr class="thin"/><p>We need to set up our environment before we can use the tool though, of course. I have not had great experiences using some of the Erlang tooling, but I was actually pleasently surprised here and found the process a little more tolerable, which was nice. Even with that said, though, there is still some configuration to do. First, need to make sure the right files get compiled. Concuerror does not work with .exs files, so we need to make sure that we only compile the tests that we need and that we
+can avoid the extentions. That is done by altering the mix.exs configuration file to read:</p><pre><code class="elixir">def project do
+    [
+      # ...
+      elixirc_paths: elixirc_paths(Mix.env),
+      test_pattern: &quot;*_test.ex*&quot;,
+      warn_test_pattern: nil
+    ]
+  end
+
+  defp elixirc_paths(:test), do: [&quot;lib&quot;, &quot;test/concuerror&quot;]
+  defp elixirc_paths(_), do: [&quot;lib&quot;]</code></pre><p>It is also worth noting that if you will want to have the images for easy viewing, it helps to install graphviz, which will enable you to use the <code class="inline">dot</code> command, which we will use like this after we run out test and it generates the .dot file for us, which we will the convert to a .png image.</p><pre><code class="shell-session">dot -Tpng my_graph.dot &gt; my_graph.png</code></pre><p>Now our images are availalbe. But of course we are still early in our testing and still getting failures. I’ll just use one of the images but trust me I had many of these. After some trial and error runs and then finally giving up and reading some documentation, turns out there are a few little intricacies that we need to account for first. Here is the fhat first failing image.</p><hr class="thin"/><p><img src="/assets/images/elixir/subscription_graph.png#md-img" alt="png"/></p><hr class="thin"/><p>This is a version of the first concurrency test I was running, with only one interleaving, but even so I was running into some issues, all seeming to do with just making sure that we have our <code class="inline">handle_cast</code> or <code class="inline">handle_info</code> callbacks properly set up in our module.</p><pre><code class="elixir">defmodule FanCan.ConcurrencyTest do
+
+  def push(pid, n) do
+      GenServer.cast(pid, {:new_message, n})
+  end
+
+  @doc &quot;&quot;&quot;
+  For now this is just a simple test. Need to perform some actions
+  with the elements and continue to test
+  &quot;&quot;&quot;
+  def test do
+    # {:ok, pid} = GenServer.start_link(FanCanWeb.ThreadLive.Index, [])
+    {:ok, pid} = GenServer.start_link(FanCanWeb.SubscriptionServer, [])
+
+    [&quot;a&quot;,&quot;b&quot;,&quot;c&quot;,&quot;d&quot;,&quot;e&quot;,&quot;f&quot;,&quot;g&quot;] |&gt; Enum.each(fn ltr -&gt; push(pid, ltr) end)
+
+    [&quot;h&quot;,&quot;i&quot;,&quot;j&quot;,&quot;k&quot;,&quot;l&quot;,&quot;m&quot;,&quot;n&quot;] |&gt; Enum.each(fn ltr -&gt; push(pid, ltr) end)
+
+    [&quot;o&quot;,&quot;p&quot;,&quot;q&quot;,&quot;r&quot;,&quot;s&quot;,&quot;t&quot;,&quot;u&quot;] |&gt; Enum.each(fn ltr -&gt; push(pid, ltr) end)
+
+    [&quot;u&quot;,&quot;v&quot;,&quot;w&quot;,&quot;x&quot;,&quot;y&quot;,&quot;z&quot;,&quot;!&quot;] |&gt; Enum.each(fn ltr -&gt; push(pid, ltr) end)
+
+    # This is necessary. Even if there was no crash of the GenServer,
+    # not stopping it would make Concuerror believe that the process
+    # is stuck forever, as no new process can ever send it messages in
+    # this test.
+    GenServer.stop(pid)
+  end
+end</code></pre><p>And now here is the SubscriptionServer module and the implementation of the GenServer callback methods.</p><pre><code class="elixir">defmodule FanCanWeb.SubscriptionServer do
+  use GenServer
+  alias FanCan.Core.TopicHelpers
+  alias FanCan.Accounts.UserFollows
+  
+  def start do
+    initial_state = []
+    receive_messages(initial_state)
+  end
+
+  def receive_messages(state) do
+    receive do
+      msg -&gt;
+        {:ok, new_state} = handle_message(msg, state)
+        receive_messages(new_state)
+    end
+  end
+
+  def handle_message({:subscribe_user_follows, user_follows}, state) do
+    for follow = %UserFollows{} &lt;- user_follows do
+      IO.inspect(follow, label: &quot;Type&quot;)
+      # Subscribe to user_follows. E.g. forums that user subscribes to
+      case follow.type do
+        :candidate -&gt; TopicHelpers.subscribe_to_followers(&quot;candidate&quot;, follow.follow_ids)
+        :user -&gt; TopicHelpers.subscribe_to_followers(&quot;user&quot;, follow.follow_ids)
+        :forum -&gt; TopicHelpers.subscribe_to_followers(&quot;forum&quot;, follow.follow_ids)
+        :election -&gt; TopicHelpers.subscribe_to_followers(&quot;election&quot;, follow.follow_ids)
+      end
+    end
+    {:ok, []}
+  end
+
+  def handle_message({:subscribe_user_published, current_user_published_ids}, state) do
+    with %{post_ids: post_ids, thread_ids: thread_ids} &lt;- current_user_published_ids do
+      IO.inspect(thread_ids, label: &quot;thread_ids_b&quot;)
+      for post_id &lt;- post_ids do
+        FanCanWeb.Endpoint.subscribe(&quot;posts_&quot; &lt;&gt; post_id)
+      end
+      for thread_id &lt;- thread_ids do
+        FanCanWeb.Endpoint.subscribe(&quot;threads_&quot; &lt;&gt; thread_id)
+      end
+    end
+    {:ok, []}
+  end
+
+  def handle_info(_) do
+    IO.puts &quot;Info Handler&quot;
+    {:ok, []}
+  end
+
+  def handle_cast({:new_message, element}, state) do
+    IO.inspect(state, label: &quot;Concuerror - State var&quot;)
+    IO.inspect(element, label: &quot;Concuerror - Element var&quot;)
+    if String.contains?(element, &quot;b&quot;) do
+      String.upcase(element)
+    end
+    {:noreply, [element | state]}
+  end
+</code></pre><p>Most of my errors centered around getting those arguments correct, which took some getting used to tracking them down in the Concuerror logs. Here are some examples from the logs that will give us some idea of what we can look for when things go wrong.</p><hr class="thin"/><p>There are also a few little steps which you might run into as well depending on how your system in configured. E.g I needed to update my path w/ <code class="inline">export PATH=/Concuerror/bin:$PATH</code> - which is where my instance of Concuerror was installed to. There were also some permissions to account for if you end up utilizing the above script in some fasion. These are pretty easily solved with a <code class="inline">chmod +x ./concuerror_test.sh</code> or similar.</p><hr class="thin"/><p>Here was the final command that I ended up needing to run in order to satisfy all the tests. The hints are there if you squint your eyes and look hard enough in the docs, but it ceratinly took me a little while to find out the different options needed.</p><pre><code class="shell-session">  ./concuerror_test.sh FanCan.ConcurrencyTest --graph my_graph.dot --after_timeout 1000 --treat_as_normal shutdown</code></pre><p>After all of that, though, we are finally able to get a running test and see some green.</p><p><img src="/assets/images/elixir/success_graph.png#md-img" alt="png"/></p><p>Similarly, it is much nicer to look at the report of the successful test versus the one that is riddled with errors. Here is the complete .txt file that is generated.</p><pre><code class="shell-session">Concuerror 0.21.0+build.2371.refaf91d78 started at 12 Jul 2023 17:58:22
+ Options:
+  [{after_timeout,1000},
+   {assertions_only,false},
+   {assume_racing,true},
+   {depth_bound,500},
+   {disable_sleep_sets,false},
+   {dpor,optimal},
+   {entry_point,{&#39;Elixir.FanCan.ConcurrencyTest&#39;,test,[]}},
+   {exclude_module,[]},
+   {first_process_errors_only,false},
+   {ignore_error,[]},
+   {instant_delivery,true},
+   {interleaving_bound,infinity},
+   {keep_going,true},
+   {log_all,false},
+   {non_racing_system,[]},
+   {pa,&quot;/usr/local/lib/elixir/lib/elixir/ebin&quot;},
+   {pa,&quot;/usr/local/lib/elixir/lib/ex_unit/ebin&quot;},
+   {pa,&quot;_build/test/lib/fan_can/ebin/&quot;},
+   {print_depth,20},
+   {scheduling,round_robin},
+   {scheduling_bound_type,none},
+   {show_races,false},
+   {strict_scheduling,false},
+   {symbolic_names,true},
+   {timeout,5000},
+   {treat_as_normal,[shutdown]},
+   {use_receive_patterns,true}]
+################################################################################
+Exploration completed!
+  No errors found!
+################################################################################
+Tips:
+--------------------------------------------------------------------------------
+* Check `--help attributes&#39; for info on how to pass options via module attributes.
+* Running without a scheduling_bound corresponds to verification and may take a long time.
+* Increase &#39;--print_depth&#39; if output/graph contains &quot;...&quot;.
+* Your test sends messages to the &#39;user&#39; process to write output. Such messages from different processes may race, 
+* producing spurious interleavings. Consider using &#39;--non_racing_system user&#39; to avoid them.
+
+################################################################################
+Info:
+--------------------------------------------------------------------------------
+* Showing progress (&#39;-h progress&#39;, for details)
+* Writing results in concuerror_report.txt
+* Writing graph in my_graph.dot
+* Only logging errors (&#39;--log_all false&#39;)
+* Automatically instrumented module io_lib
+* Showing PIDs as &quot;&lt;symbolic name(/last registered name)&gt;&quot; (&#39;-h symbolic_names&#39;).
+* Automatically instrumented module error_handler
+* Automatically instrumented module &#39;Elixir.FanCan.ConcurrencyTest&#39;
+* Automatically instrumented module &#39;Elixir.GenServer&#39;
+* Automatically instrumented module &#39;Elixir.Keyword&#39;
+* Automatically instrumented module gen
+* Automatically instrumented module proc_lib
+* Automatically instrumented module gen_server
+* Automatically instrumented module &#39;Elixir.FanCanWeb.SubscriptionServer&#39;
+* Automatically instrumented module &#39;Elixir.Enum&#39;
+* Automatically instrumented module lists
+* Automatically instrumented module sys
+* Automatically instrumented module &#39;Elixir.IO&#39;
+* Automatically instrumented module io
+
+################################################################################
+Done at 12 Jul 2023 17:58:26 (Exit status: ok)
+  Summary: 0 errors, 1/1 interleavings explored</code></pre></section>
+  </body>
+</html>
