@@ -1,0 +1,63 @@
+
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Mojo 🔥 Intro - r4z4 Site</title>
+    <link rel="stylesheet" href="/assets/css/style.css">
+    <link rel="stylesheet" href="/assets/css/home_animation.css">
+    <link rel="stylesheet" href="/assets/css/markdown.css">
+  </head>
+  <body>
+    
+<div id="navbar_div">
+  <ul id="navbar">
+    <li><a href="/index.html">Home</a></li>
+    <li><a href="/posts">Posts</a></li>
+  </ul>
+</div>
+
+    <h1 class="base-header"><a href="/">Various Writings and Observations</a></h1>
+    <section class="md-body"><h1 id="mojo-🔥-intro">Mojo 🔥 Intro</h1><p>Posted on Wednesday, 16 Aug 2023 by r4z4</p><p>Tags:</p><ul><li><a href="/tags/intro">intro</a></li><li><a href="/tags/mojo">mojo</a></li></ul><p>I recently came across the Mojo languages and pretty quickly was drawn to it for a couple of reasons. First, it has a lot of new ideas (often remixed from existing ideas) that are exciting. It also has a lot of promise, and from what I gather, a good direction and overall goal. Finally, yes, it uses a fire emoji for the file extension (you can also just use .mojo, but why would you). Go with .🔥</p><p>It is a very new platform and language that was recently lauched, and so currently the only way to give it a try is to use the Mojo Playground. I signed up for a trial and was able to start using it the next day. There is certainly a lot of material to go over and so much that will change and go away and be added, but there are few rather larger ideas and overarching things to keep in mind. Again, these are also probably just a short list of a what is actually out there, but it is just what I have been able to pick up on so far.</p><hr class="thin"/><p>First, Mojo is the language, Modular is the infrastructure and company. Mojo is a superset of Python. There is a lot that goes into that, but overall it means it works with current Python code and adds to it, in varying ways that often require very careful and deliberate design choices. We’ll take a look at some of those here and this will be the palce that I will return to to add when we encounter some new ones or find out an error that we have made.</p><hr class="thin"/><p>It is also worth noting how to do the first thing that probably everyone will try.</p><pre><code class="python">from PythonInterface import Python
+
+# This is equivalent to Python&#39;s `import numpy as np`
+let np = Python.import_module(&quot;numpy&quot;)
+
+# Now use numpy as if writing in Python
+a = np.array([1, 2, 3])
+print(a)</code></pre><p>It seemed like a good idea to at least have a place for me to return to to keep a more organized and structured set of notes for this thing. There is a lot going on here, so having this plus the ability to adapt Mojo as needed will be a nice way to ease into it.
+The beauty of the project and this approach is that you can really start to focus on the areas where you feel the most comfortable and have the most experience. For the sake of learning the overall convepts though I like to start on the other end and explore ideas
+that I am not as familar with.  I have only done a little bit of C++ in my life and very little compiler work in general, and so that is where I will be starting.</p><hr class="thin"/><pre><code class="python">def example(inout a: Int, b: Int, c):
+    # b and c use value semantics so they&#39;re mutable in the function
+    ...
+
+fn example(inout a: Int, b_in: Int, c_in: Object):
+    # b_in and c_in are immutable references, so we make mutable shadow copies
+    var b = b_in
+    var c = c_in
+    ...</code></pre><h3 id="but,-we-actually-do-need-to-get-something-going-though-and-make-sure--we-understand-the-basics-before-we-can-even-do-that,-though.">But, we actually DO need to get something going though and make sure  we understand the basics before we can even do that, though.</h3><hr class="thin"/><h4 id="one-other-quick-note-is-the-concept-of-mutability-&amp;-mutable-arguments-(inout)">One other quick note is the concept of mutability &amp; mutable arguments (inout)</h4><hr class="thin"/><p>If you define an fn function and want an argument to be mutable (so that changes to the argument inside the function are visible outside the function), you must declare the argument as mutable with the inout keyword.</p><hr class="thin"/></section>
+  </body>
+</html>
+<script>
+const ws_url = "ws://" + location.host + "/serum_live_reloader";
+var ws;
+
+connect();
+
+function connect() {
+  ws = new WebSocket(ws_url);
+  ws.onmessage = onMessage;
+  ws.onclose = onClose;
+}
+
+function onMessage(e) {
+  if (e.data === "reload") {
+    location.reload();
+  }
+}
+
+function onClose(e) {
+  console.warn("WebSocket disconnected from server. Reconnecting in 10 seconds.");
+  setTimeout(connect, 10000)
+}
+</script>

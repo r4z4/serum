@@ -1,0 +1,125 @@
+
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Categorization using Linear Discriminant Analysis - r4z4 Site</title>
+    <link rel="stylesheet" href="/assets/css/style.css">
+    <link rel="stylesheet" href="/assets/css/home_animation.css">
+    <link rel="stylesheet" href="/assets/css/markdown.css">
+  </head>
+  <body>
+    
+<div id="navbar_div">
+  <ul id="navbar">
+    <li><a href="/index.html">Home</a></li>
+    <li><a href="/posts">Posts</a></li>
+  </ul>
+</div>
+
+    <h1 class="base-header"><a href="/">Various Writings and Observations</a></h1>
+    <section class="md-body"><h1 id="categorization-using-linear-discriminant-analysis">Categorization using Linear Discriminant Analysis</h1><p>Posted on Wednesday, 16 Aug 2023 by r4z4</p><p>Tags:</p><ul><li><a href="/tags/LDA">LDA</a></li><li><a href="/tags/text-classification">text-classification</a></li></ul><pre><code class="python">import numpy as np
+import regex as re
+import pandas as pd
+from tqdm.notebook import tqdm
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn import preprocessing
+from sklearn.model_selection import train_test_split
+from sklearn.model_selection import RepeatedStratifiedKFold
+from sklearn.model_selection import cross_val_score
+from sklearn.discriminant_analysis import LinearDiscriminantAnalysis</code></pre><h3 id="load-normalized-data">Load Normalized Data</h3><hr class="thin"/><p>While we were exploring the dataset we went ahead and just created the dataframes we need for these next few runs. Again, like some of the other runs, we have some extras and some with some different embeddings or preprocessed texts.  The upside of using such small and limited examples is that at least it gives us a chance to quickly perform changes like that to get a better sense of how the data is responding.</p><hr class="thin"/><pre><code class="python">df = pd.read_pickle(&#39;../trivia_classification/data/dataframes/trivia_qs_normalized.pkl&#39;)
+df.shape</code></pre><pre><code>(34460, 2)</code></pre><pre><code class="python">df.head()</code></pre><pre><code class="python">X = df[&#39;Questions&#39;].values
+y = df[&#39;category&#39;].values</code></pre><pre><code class="python">print(X)</code></pre><pre><code>[&#39;what hollywood actor portrayed casanova in the 2005 movie entitled casanova based on the life of the popular adventurer &#39;
+ &#39;which of these is not a son of adam and eve &#39;
+ &#39;noah sent these two birds out of the ark to search for land &#39; ...
+ &#39;on what kind of surface is the sport called bandy practiced &#39;
+ &#39;what type of sport is enduro &#39;
+ &#39;elements of which sport does the game called pickleball include &#39;]</code></pre><pre><code class="python">target_names = np.unique(y)</code></pre><pre><code class="python">from sklearn.preprocessing import OrdinalEncoder
+enc=OrdinalEncoder() 
+
+# Encode categorical values
+df[&#39;category_enc&#39;]=enc.fit_transform(df[[&#39;category&#39;]])
+
+# Check encoding results in a crosstab
+pd.crosstab(df[&#39;category&#39;], df[&#39;category_enc&#39;], margins=False)</code></pre><pre><code class="python">y = df[&#39;category_enc&#39;].values</code></pre><pre><code class="python">import nltk
+nltk.download(&#39;stopwords&#39;)
+from nltk.corpus import stopwords
+from sklearn.feature_extraction.text import TfidfVectorizer
+vec = TfidfVectorizer(max_features=50,
+                      min_df=8,
+                      max_df=0.7,
+                      stop_words=stopwords.words(&quot;english&quot;))
+cleaned = vec.fit_transform(X).toarray()</code></pre><pre><code class="python">X_train, X_test, y_train, y_test = train_test_split(cleaned, y, test_size=0.2, random_state=0)</code></pre><pre><code class="python">len(X_train)</code></pre><pre><code>27568</code></pre><pre><code class="python">len(y_train)</code></pre><pre><code>27568</code></pre><pre><code class="python">model = LinearDiscriminantAnalysis()
+model.fit(X_train, y_train)</code></pre><pre><code class="python">y_hat_lda_model = model.predict(X_test)
+actual_and_lda_model_preds = pd.DataFrame({&quot;Actual Category&quot;: y_test,
+                                           &quot;Predicted Category&quot;: y_hat_lda_model})
+actual_and_lda_model_preds</code></pre><pre><code class="python">from sklearn import metrics
+lda_model_rpt = pd.DataFrame(metrics.classification_report(y_test, y_hat_lda_model, output_dict=True)).transpose()
+lda_model_rpt</code></pre><pre><code class="python">#checking for the model accuracy using score method
+model.fit(X_train, y_train).score(X_train, y_train)</code></pre><pre><code>0.4252756819500871</code></pre><pre><code class="python">y_pred = model.predict(X_test)</code></pre><pre><code class="python">model = LinearDiscriminantAnalysis()
+data_plot = model.fit(X_train, y_train).transform(X_train)
+
+#create LDA plot
+plt.figure()
+colors = [&#39;red&#39;, &#39;green&#39;, &#39;blue&#39;, &#39;orange&#39;, &#39;purple&#39;, &#39;violet&#39;, &#39;teal&#39;, &#39;maroon&#39;, &#39;lime&#39;, &#39;grey&#39;, &#39;aqua&#39;, &#39;gold&#39;, &#39;yellow&#39;, &#39;black&#39;]
+lw = 2
+for color, i, target_name in zip(colors, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13], target_names):
+    plt.scatter(data_plot[y_train == i, 0], data_plot[y_train == i, 1], alpha=.8, color=color,
+                label=target_name)
+
+#add legend to plot
+plt.legend(loc=&#39;best&#39;, shadow=False, scatterpoints=1)
+
+#display LDA plot
+plt.xlim([-2, 2])
+plt.ylim([-2, 2])
+plt.show()</code></pre><p><img src="/assets/images/trivia/lda_trivia_0.png#img-thumbnail" alt="png"/></p><pre><code class="python">from sklearn.decomposition import PCA
+pca = PCA(n_components=2)
+X_pca = pca.fit_transform(X_train, y_train)</code></pre><p>PCA selects the components which’d result in highest spread (retain most info) &amp; not necessarily the ones that maximize separation between classes.</p><pre><code class="python">pca.explained_variance_ratio_</code></pre><pre><code>array([0.06503106, 0.05712134])</code></pre><pre><code class="python">plt.xlabel(&#39;PC1&#39;)
+plt.ylabel(&#39;PC2&#39;)
+plt.scatter(
+    X_pca[:,0],
+    X_pca[:,1],
+    c=y_train,
+    cmap=&#39;rainbow&#39;,
+    alpha=0.7,
+    edgecolors=&#39;b&#39;
+)</code></pre><pre><code class="python">data_plot[1,1]</code></pre><pre><code>0.11961195950953266</code></pre><p><img src="/assets/images/trivia/lda_trivia_1.png#img-thumbnail" alt="png"/></p><pre><code class="python">print(data_plot)</code></pre><pre><code>[[ 1.41130353  1.13511287 -0.58189461 ...  1.29220416 -0.35522076
+   0.49487595]
+ [-1.05597864  0.11961196  1.01331247 ... -1.17341956  1.1449998
+   1.04536396]
+ [-0.57571158  0.08735004  0.58077694 ... -0.2778546   0.42449414
+  -0.22682093]
+ ...
+ [-0.57571158  0.08735004  0.58077694 ... -0.2778546   0.42449414
+  -0.22682093]
+ [-1.32424386  0.12582777  1.68527725 ... -2.42901658 -0.36184077
+   1.8126642 ]
+ [-0.51144126  0.18091163  0.57832353 ... -0.94078746  0.97648786
+  -0.40167008]]</code></pre></section>
+  </body>
+</html>
+<script>
+const ws_url = "ws://" + location.host + "/serum_live_reloader";
+var ws;
+
+connect();
+
+function connect() {
+  ws = new WebSocket(ws_url);
+  ws.onmessage = onMessage;
+  ws.onclose = onClose;
+}
+
+function onMessage(e) {
+  if (e.data === "reload") {
+    location.reload();
+  }
+}
+
+function onClose(e) {
+  console.warn("WebSocket disconnected from server. Reconnecting in 10 seconds.");
+  setTimeout(connect, 10000)
+}
+</script>

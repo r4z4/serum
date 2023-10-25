@@ -1,0 +1,223 @@
+
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>TREC Dataset with EDA - Easy Data Augmentation - Methods - r4z4 Site</title>
+    <link rel="stylesheet" href="/assets/css/style.css">
+    <link rel="stylesheet" href="/assets/css/home_animation.css">
+    <link rel="stylesheet" href="/assets/css/markdown.css">
+  </head>
+  <body>
+    
+<div id="navbar_div">
+  <ul id="navbar">
+    <li><a href="/index.html">Home</a></li>
+    <li><a href="/posts">Posts</a></li>
+  </ul>
+</div>
+
+    <h1 class="base-header"><a href="/">Various Writings and Observations</a></h1>
+    <section class="md-body"><h1 id="trec-dataset-with-eda---easy-data-augmentation---methods">TREC Dataset with EDA - Easy Data Augmentation - Methods</h1><p>Posted on Wednesday, 16 Aug 2023 by r4z4</p><p>Tags:</p><ul><li><a href="/tags/NLP">NLP</a></li><li><a href="/tags/augmentation">augmentation</a></li><li><a href="/tags/trec">trec</a></li></ul><p>This is another dataset where we have a relatively small dataset, and so we’ll be using the EDA methods for some simple data augmentation, which will allow us to quickly and easily maximize the size of the data that we have. We will use the Synonym Repalcement, Random Insertion and Random Swap methods and see where that will take us.</p><pre><code class="python">import pandas as pd
+import random</code></pre><pre><code class="python">df = pd.read_pickle(r&#39;data/dataframes/final_cleaned_normalized.pkl&#39;)</code></pre><pre><code class="python">df.head()</code></pre><pre><code class="python">import random
+from random import shuffle
+random.seed(1)
+
+stop_words = [&#39;i&#39;, &#39;me&#39;, &#39;my&#39;, &#39;myself&#39;, &#39;we&#39;, &#39;our&#39;, 
+            &#39;ours&#39;, &#39;ourselves&#39;, &#39;you&#39;, &#39;your&#39;, &#39;yours&#39;, 
+            &#39;yourself&#39;, &#39;yourselves&#39;, &#39;he&#39;, &#39;him&#39;, &#39;his&#39;, 
+            &#39;himself&#39;, &#39;she&#39;, &#39;her&#39;, &#39;hers&#39;, &#39;herself&#39;, 
+            &#39;it&#39;, &#39;its&#39;, &#39;itself&#39;, &#39;they&#39;, &#39;them&#39;, &#39;their&#39;, 
+            &#39;theirs&#39;, &#39;themselves&#39;, &#39;what&#39;, &#39;which&#39;, &#39;who&#39;, 
+            &#39;whom&#39;, &#39;this&#39;, &#39;that&#39;, &#39;these&#39;, &#39;those&#39;, &#39;am&#39;, 
+            &#39;is&#39;, &#39;are&#39;, &#39;was&#39;, &#39;were&#39;, &#39;be&#39;, &#39;been&#39;, &#39;being&#39;, 
+            &#39;have&#39;, &#39;has&#39;, &#39;had&#39;, &#39;having&#39;, &#39;do&#39;, &#39;does&#39;, &#39;did&#39;,
+            &#39;doing&#39;, &#39;a&#39;, &#39;an&#39;, &#39;the&#39;, &#39;and&#39;, &#39;but&#39;, &#39;if&#39;, &#39;or&#39;,
+            &#39;because&#39;, &#39;as&#39;, &#39;until&#39;, &#39;while&#39;, &#39;of&#39;, &#39;at&#39;, 
+            &#39;by&#39;, &#39;for&#39;, &#39;with&#39;, &#39;about&#39;, &#39;against&#39;, &#39;between&#39;,
+            &#39;into&#39;, &#39;through&#39;, &#39;during&#39;, &#39;before&#39;, &#39;after&#39;, 
+            &#39;above&#39;, &#39;below&#39;, &#39;to&#39;, &#39;from&#39;, &#39;up&#39;, &#39;down&#39;, &#39;in&#39;,
+            &#39;out&#39;, &#39;on&#39;, &#39;off&#39;, &#39;over&#39;, &#39;under&#39;, &#39;again&#39;, 
+            &#39;further&#39;, &#39;then&#39;, &#39;once&#39;, &#39;here&#39;, &#39;there&#39;, &#39;when&#39;, 
+            &#39;where&#39;, &#39;why&#39;, &#39;how&#39;, &#39;all&#39;, &#39;any&#39;, &#39;both&#39;, &#39;each&#39;, 
+            &#39;few&#39;, &#39;more&#39;, &#39;most&#39;, &#39;other&#39;, &#39;some&#39;, &#39;such&#39;, &#39;no&#39;, 
+            &#39;nor&#39;, &#39;not&#39;, &#39;only&#39;, &#39;own&#39;, &#39;same&#39;, &#39;so&#39;, &#39;than&#39;, &#39;too&#39;, 
+            &#39;very&#39;, &#39;s&#39;, &#39;t&#39;, &#39;can&#39;, &#39;will&#39;, &#39;just&#39;, &#39;don&#39;, 
+            &#39;should&#39;, &#39;now&#39;, &#39;&#39;]
+
+#cleaning up text
+import re
+def get_only_chars(line):
+
+    clean_line = &quot;&quot;
+
+    line = line.replace(&quot;’&quot;, &quot;&quot;)
+    line = line.replace(&quot;&#39;&quot;, &quot;&quot;)
+    line = line.replace(&quot;-&quot;, &quot; &quot;) #replace hyphens with spaces
+    line = line.replace(&quot;\t&quot;, &quot; &quot;)
+    line = line.replace(&quot;\n&quot;, &quot; &quot;)
+    line = line.lower()
+
+    for char in line:
+        if char in &#39;qwertyuiopasdfghjklzxcvbnm &#39;:
+            clean_line += char
+        else:
+            clean_line += &#39; &#39;
+
+    clean_line = re.sub(&#39; +&#39;,&#39; &#39;,clean_line) #delete extra spaces
+    if clean_line[0] == &#39; &#39;:
+        clean_line = clean_line[1:]
+    return clean_line</code></pre><pre><code class="python">from nltk.corpus import wordnet</code></pre><pre><code class="python">########################################################################
+# Synonym replacement
+# Replace n words in the sentence with synonyms from wordnet
+########################################################################
+
+import nltk
+nltk.download(&#39;wordnet&#39;)
+
+def synonym_replacement(words, n):
+    new_words = words.copy()
+    random_word_list = list(set([word for word in words if word not in stop_words]))
+    random.shuffle(random_word_list)
+    num_replaced = 0
+    for random_word in random_word_list:
+        synonyms = get_synonyms(random_word)
+        if len(synonyms) &gt;= 1:
+            synonym = random.choice(list(synonyms))
+            new_words = [synonym if word == random_word else word for word in new_words]
+            #print(&quot;replaced&quot;, random_word, &quot;with&quot;, synonym)
+            num_replaced += 1
+        if num_replaced &gt;= n: #only replace up to n words
+            break
+
+    #this is stupid but we need it, trust me
+    sentence = &#39; &#39;.join(new_words)
+    new_words = sentence.split(&#39; &#39;)
+
+    return new_words
+
+def get_synonyms(word):
+    synonyms = set()
+    for syn in wordnet.synsets(word): 
+        for l in syn.lemmas(): 
+            synonym = l.name().replace(&quot;_&quot;, &quot; &quot;).replace(&quot;-&quot;, &quot; &quot;).lower()
+            synonym = &quot;&quot;.join([char for char in synonym if char in &#39; qwertyuiopasdfghjklzxcvbnm&#39;])
+            synonyms.add(synonym) 
+    if word in synonyms:
+        synonyms.remove(word)
+    return list(synonyms)
+
+def replace_rejoin_sr(x):
+    words = synonym_replacement(x.split(), 1)
+    sentence = &#39; &#39;.join(words)
+    return sentence</code></pre><pre><code>[nltk_data] Downloading package wordnet to /root/nltk_data...
+[nltk_data]   Package wordnet is already up-to-date!</code></pre><pre><code class="python">replace_rejoin_sr(&#39;What is the total land mass of the continent of africa&#39;)</code></pre><pre><code>&#39;What is the add up land mass of the continent of africa&#39;</code></pre><pre><code class="python">## Loop through and apply synonym_replacement for each headline
+df[&#39;question_cleaned_sr&#39;] = df[&#39;question_cleaned&#39;].apply(lambda x: replace_rejoin_sr(x))</code></pre><pre><code class="python">df.head()</code></pre><p>Note: I did need to add a check for word length - <code class="inline">if len(words) &gt; 1:</code> - here -&gt; Again, just a function of us using such a limited dataset. </p><pre><code class="python">########################################################################
+# Random insertion
+# Randomly insert n words into the sentence
+########################################################################
+
+def random_insertion(words, n):
+    new_words = words.copy()
+    for _ in range(n):
+        if len(words) &gt; 1:
+            add_word(new_words)
+    return new_words
+
+def add_word(new_words):
+    synonyms = []
+    counter = 0
+    while len(synonyms) &lt; 1:
+        random_word = new_words[random.randint(0, len(new_words)-1)]
+        synonyms = get_synonyms(random_word)
+        counter += 1
+        if counter &gt;= 10:
+            return
+    random_synonym = synonyms[0]
+    random_idx = random.randint(0, len(new_words)-1)
+    new_words.insert(random_idx, random_synonym)
+    
+def replace_rejoin_ri(x):
+    words = random_insertion(x.split(), 1)
+    sentence = &#39; &#39;.join(words)
+    return sentence</code></pre><pre><code class="python">replace_rejoin_ri(&#39;What is the total land mass of the continent of africa&#39;)</code></pre><pre><code>&#39;What is the total represent land mass of the continent of africa&#39;</code></pre><pre><code class="python">df[&#39;question_cleaned_ri&#39;] = df[&#39;question_cleaned&#39;].apply(lambda x: replace_rejoin_ri(x))</code></pre><pre><code class="python">########################################################################
+# Random swap
+# Randomly swap two words in the sentence n times
+########################################################################
+
+def random_swap(words, n):
+    new_words = words.copy()
+    for _ in range(n):
+        if len(words) &gt; 1:
+            new_words = swap_word(new_words)
+    return new_words
+
+def swap_word(new_words):
+    random_idx_1 = random.randint(0, len(new_words)-1)
+    random_idx_2 = random_idx_1
+    counter = 0
+    while random_idx_2 == random_idx_1:
+        random_idx_2 = random.randint(0, len(new_words)-1)
+        counter += 1
+        if counter &gt; 3:
+            return new_words
+    new_words[random_idx_1], new_words[random_idx_2] = new_words[random_idx_2], new_words[random_idx_1] 
+    return new_words
+
+def replace_rejoin_rs(x):
+    words = random_swap(x.split(), 1)
+    sentence = &#39; &#39;.join(words)
+    return sentence</code></pre><pre><code class="python">replace_rejoin_rs(&#39;What is the total land mass of the continent of africa&#39;)</code></pre><pre><code>&#39;What is the total land mass africa the continent of of&#39;</code></pre><pre><code class="python">df[&#39;question_cleaned_rs&#39;] = df[&#39;question_cleaned&#39;].apply(lambda x: replace_rejoin_rs(x))</code></pre><hr class="thin"/><p>For our particular case here we will not be using the Random Deletion. We can still perform the augmentation though and add it to our dataframe for reference, and I belive you will see why there is really no need for us to use this method here.</p><hr class="thin"/><pre><code class="python">########################################################################
+# Random deletion
+# Randomly delete words from the sentence with probability p
+########################################################################
+
+def random_deletion(words, p):
+
+    #obviously, if there&#39;s only one word, don&#39;t delete it
+    if len(words) == 1:
+        return words
+
+    #randomly delete words with probability p
+    new_words = []
+    for word in words:
+        r = random.uniform(0, 1)
+        if r &gt; p:
+            new_words.append(word)
+
+    #if you end up deleting all words, just return a random word
+    if len(new_words) == 0:
+        rand_int = random.randint(0, len(words)-1)
+        return [words[rand_int]]
+
+    return new_words
+
+def replace_rejoin_rd(x):
+    words = random_swap(x.split(), 1)
+    sentence = &#39; &#39;.join(words)
+    return sentence</code></pre><pre><code class="python">replace_rejoin_rd(&#39;What is the total land mass of the continent of africa&#39;)</code></pre><pre><code>&#39;What the is total land mass of the continent of africa&#39;</code></pre><pre><code class="python">df[&#39;question_cleaned_rd&#39;] = df[&#39;question_cleaned&#39;].apply(lambda x: replace_rejoin_rs(x))</code></pre><pre><code class="python">df.tail(4)</code></pre><table><thead><tr><th style="text-align: right"></th><th style="text-align: left">entity</th><th style="text-align: left">question</th><th style="text-align: left">question_normalized</th><th style="text-align: left">question_cleaned</th><th style="text-align: left">question_normalized</th><th style="text-align: left">question_cleaned</th><th style="text-align: left">question_normalized</th><th style="text-align: left">question_cleaned</th></tr></thead><tbody><tr><td style="text-align: right">5432</td><td style="text-align: left">HUM</td><td style="text-align: left">What English explorer discovered and named Vir…</td><td style="text-align: left">what english explorer discovered and named vir…</td><td style="text-align: left">english explor discov name virginia</td><td style="text-align: left">english explor discov refer virginia</td><td style="text-align: left">english explor discov va name virginia</td><td style="text-align: left">english virginia discov name explor</td><td style="text-align: left">explor english discov name virginia</td></tr><tr><td style="text-align: right">5433</td><td style="text-align: left">ENTY</td><td style="text-align: left">What war added jeep and quisling to the Englis…</td><td style="text-align: left">what war added jeep and quisling to the englis…</td><td style="text-align: left">war ad jeep quisl english languag</td><td style="text-align: left">warfare ad jeep quisl english languag</td><td style="text-align: left">war ad jeep quisl english people english languag</td><td style="text-align: left">ad war jeep quisl english languag</td><td style="text-align: left">war ad jeep english quisl languag</td></tr><tr><td style="text-align: right">5434</td><td style="text-align: left">LOC</td><td style="text-align: left">What country is home to Heineken beer</td><td style="text-align: left">what country is home to heineken beer</td><td style="text-align: left">countri home heineken beer</td><td style="text-align: left">countri dwelling house heineken beer</td><td style="text-align: left">countri home heineken rest home beer</td><td style="text-align: left">countri home heineken beer</td><td style="text-align: left">countri home beer heineken</td></tr><tr><td style="text-align: right">5435</td><td style="text-align: left">HUM</td><td style="text-align: left">What people make up half the Soviet Union ‘s p…</td><td style="text-align: left">what people make up half the soviet union s po…</td><td style="text-align: left">peopl make half soviet union popul</td><td style="text-align: left">peopl realise half soviet union popul</td><td style="text-align: left">peopl make north half soviet union popul</td><td style="text-align: left">peopl popul half soviet union make</td><td style="text-align: left">make peopl half soviet union popul</td></tr></tbody></table><hr class="thin"/><p>Keeping with the theme of staying simple and conise, to augment our data - since we have a relatively very small dataset - we will turn to some simple techniques that were highlighted in a popular 2019 paper titled <a href="https://arxiv.org/abs/1901.11196">“EDA: Easy Data Augmentation Techniques for Boosting Performance on Text Classification Tasks”</a>. In the paper they introduce four simpe techniques to performing data augmentation, and we will utilize them all for our dataset.</p><p>One very important point to bring up is the attention paid to the issue of how much augmentation to apply. For our purposes here, we are mainly just exploring in order to get a sense of what the techniques do and how they can - in general - affect our data. If we were engagine with real data for real business solutions, it is important to test a variety of sample sizes and tune with various hyperparamters. There is a large section in the paper dedicated to the question of how many sentences or items (naug) to augment, and note that researchers promote trying several out.</p><blockquote><p> “For smaller training sets, overfitting was more likely, so generating many augmented sentences yielded large performance boosts. For larger training sets, adding more than four augmented sentences per original sentence was unhelpful since models tend to generalize properly when large quantities of real data are available. (pg. 4)”</p></blockquote><h3 id="table-3:-recommended-usage-parameters.">Table 3: Recommended usage parameters.</h3><hr class="thin"/><table><thead><tr><th style="text-align: left">Ntrain</th><th style="text-align: center">  α</th><th style="text-align: right">  naug</th></tr></thead><tbody><tr><td style="text-align: left">500</td><td style="text-align: center">  0.05</td><td style="text-align: right">  16</td></tr><tr><td style="text-align: left">2,000</td><td style="text-align: center">  0.05</td><td style="text-align: right">  8</td></tr><tr><td style="text-align: left">5,000</td><td style="text-align: center">  0.1</td><td style="text-align: right">  4</td></tr><tr><td style="text-align: left">More</td><td style="text-align: center">  0.1</td><td style="text-align: right">  4</td></tr></tbody></table><hr class="thin"/><h4 id="table-1:-sentences-generated-using-eda.-sr:-synonym-replacement.-ri:-random-insertion.-rs:-random-swap.-rd:-random-deletion.">Table 1: Sentences generated using EDA. SR: synonym replacement. RI: random insertion. RS: random swap. RD: random deletion.</h4><hr class="thin"/><table><thead><tr><th style="text-align: left">Operation</th><th style="text-align: left">  Sentence</th></tr></thead><tbody><tr><td style="text-align: left">None</td><td style="text-align: left">  A sad, superior human comedy played out on the back roads of life.</td></tr><tr><td style="text-align: left">SR</td><td style="text-align: left">  A lamentable, superior human comedy played out on the backward road of life.</td></tr><tr><td style="text-align: left">RI</td><td style="text-align: left">  A sad, superior human comedy played out on funniness the back roads of life.</td></tr><tr><td style="text-align: left">RS</td><td style="text-align: left">  A sad, superior human comedy played out on roads back the of life.</td></tr><tr><td style="text-align: left">RD</td><td style="text-align: left">  A sad, superior human out on the roads of life.</td></tr></tbody></table><hr class="thin"/></section>
+  </body>
+</html>
+<script>
+const ws_url = "ws://" + location.host + "/serum_live_reloader";
+var ws;
+
+connect();
+
+function connect() {
+  ws = new WebSocket(ws_url);
+  ws.onmessage = onMessage;
+  ws.onclose = onClose;
+}
+
+function onMessage(e) {
+  if (e.data === "reload") {
+    location.reload();
+  }
+}
+
+function onClose(e) {
+  console.warn("WebSocket disconnected from server. Reconnecting in 10 seconds.");
+  setTimeout(connect, 10000)
+}
+</script>
