@@ -157,26 +157,3 @@ with open(f&#39;{os.getcwd()}/output/embedding.txt&#39;, &#39;w&#39;) as f:
             print(f&#39;Cannot write word {key} to dict: {e}&#39;)       </code></pre><hr class="thin"/><p>One of the really interesting and useful tools that I came across, and that I use quite regularly - often times for sanity checks, is the <a href="https://projector.tensorflow.org/">Tensorflow Embedding Projector</a>. It just provides a really quick and easy way to do some of the visualization that we have seen already, except you don’t have to step through the notebook each time. For example, here is a quick image of a search for the word “Hazard”.</p><hr class="thin"/><p><img src="/assets/images/embeddings/tf_gif.gif#img-thumbnail" alt="gif"/></p></section>
   </body>
 </html>
-<script>
-const ws_url = "ws://" + location.host + "/serum_live_reloader";
-var ws;
-
-connect();
-
-function connect() {
-  ws = new WebSocket(ws_url);
-  ws.onmessage = onMessage;
-  ws.onclose = onClose;
-}
-
-function onMessage(e) {
-  if (e.data === "reload") {
-    location.reload();
-  }
-}
-
-function onClose(e) {
-  console.warn("WebSocket disconnected from server. Reconnecting in 10 seconds.");
-  setTimeout(connect, 10000)
-}
-</script>

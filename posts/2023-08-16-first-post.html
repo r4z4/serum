@@ -21,26 +21,3 @@
     <section class="md-body"><h1 id="this-is-the-first-post">This is the First Post</h1><p>Posted on Wednesday, 16 Aug 2023 by r4z4</p><p>Tags:</p><ul><li><a href="/tags/august">august</a></li><li><a href="/tags/first">first</a></li></ul><p>I guess this will be the first post here. Hope it is a good one.</p></section>
   </body>
 </html>
-<script>
-const ws_url = "ws://" + location.host + "/serum_live_reloader";
-var ws;
-
-connect();
-
-function connect() {
-  ws = new WebSocket(ws_url);
-  ws.onmessage = onMessage;
-  ws.onclose = onClose;
-}
-
-function onMessage(e) {
-  if (e.data === "reload") {
-    location.reload();
-  }
-}
-
-function onClose(e) {
-  console.warn("WebSocket disconnected from server. Reconnecting in 10 seconds.");
-  setTimeout(connect, 10000)
-}
-</script>

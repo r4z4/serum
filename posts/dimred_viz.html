@@ -271,26 +271,3 @@ with open(path) as f:
     return sorted(glove_embeddings.keys(), key=lambda word: spatial.distance.euclidean(glove_embeddings[word], embedding))</code></pre><pre><code class="python">find_closest_embeddings(glove_embeddings[&quot;king&quot;])[:5]</code></pre><pre><code>[&#39;king&#39;, &#39;prince&#39;, &#39;queen&#39;, &#39;uncle&#39;, &#39;ii&#39;]</code></pre><pre><code class="python">print(find_closest_embeddings(glove_embeddings[&quot;twig&quot;] - glove_embeddings[&quot;branch&quot;] + glove_embeddings[&quot;hand&quot;])[:5])</code></pre><pre><code>[&#39;fingernails&#39;, &#39;toenails&#39;, &#39;stringy&#39;, &#39;peeling&#39;, &#39;shove&#39;]</code></pre><pre><code class="python">print(find_closest_embeddings(glove_embeddings[&quot;clock&quot;] - glove_embeddings[&quot;hand&quot;])[:5])</code></pre><pre><code>[&#39;2202&#39;, &#39;2224&#39;, &#39;20:20&#39;, &#39;3030&#39;, &#39;23:59&#39;]</code></pre></section>
   </body>
 </html>
-<script>
-const ws_url = "ws://" + location.host + "/serum_live_reloader";
-var ws;
-
-connect();
-
-function connect() {
-  ws = new WebSocket(ws_url);
-  ws.onmessage = onMessage;
-  ws.onclose = onClose;
-}
-
-function onMessage(e) {
-  if (e.data === "reload") {
-    location.reload();
-  }
-}
-
-function onClose(e) {
-  console.warn("WebSocket disconnected from server. Reconnecting in 10 seconds.");
-  setTimeout(connect, 10000)
-}
-</script>

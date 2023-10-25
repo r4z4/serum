@@ -38,26 +38,3 @@ fn example(inout a: Int, b_in: Int, c_in: Object):
     ...</code></pre><h3 id="but,-we-actually-do-need-to-get-something-going-though-and-make-sure--we-understand-the-basics-before-we-can-even-do-that,-though.">But, we actually DO need to get something going though and make sure  we understand the basics before we can even do that, though.</h3><hr class="thin"/><h4 id="one-other-quick-note-is-the-concept-of-mutability-&amp;-mutable-arguments-(inout)">One other quick note is the concept of mutability &amp; mutable arguments (inout)</h4><hr class="thin"/><p>If you define an fn function and want an argument to be mutable (so that changes to the argument inside the function are visible outside the function), you must declare the argument as mutable with the inout keyword.</p><hr class="thin"/></section>
   </body>
 </html>
-<script>
-const ws_url = "ws://" + location.host + "/serum_live_reloader";
-var ws;
-
-connect();
-
-function connect() {
-  ws = new WebSocket(ws_url);
-  ws.onmessage = onMessage;
-  ws.onclose = onClose;
-}
-
-function onMessage(e) {
-  if (e.data === "reload") {
-    location.reload();
-  }
-}
-
-function onClose(e) {
-  console.warn("WebSocket disconnected from server. Reconnecting in 10 seconds.");
-  setTimeout(connect, 10000)
-}
-</script>

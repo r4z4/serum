@@ -29,26 +29,3 @@ In this case I just have separate lists of strings which likely won’t illustra
     zipped = Enum.zip_with(leader_ids, leader_scores, fn x,y -&gt; &#39;#{x}--#{y}&#39; end)</code></pre><pre><code class="shell-session">zipped: [&#39;1--2200&#39;, &#39;5--2200&#39;, &#39;9--2200&#39;, &#39;2--2150&#39;, &#39;13--2150&#39;, &#39;6--1950&#39;, &#39;10--1950&#39;, &#39;14--1450&#39;, &#39;11--1350&#39;, &#39;7--1350&#39;]</code></pre></section>
   </body>
 </html>
-<script>
-const ws_url = "ws://" + location.host + "/serum_live_reloader";
-var ws;
-
-connect();
-
-function connect() {
-  ws = new WebSocket(ws_url);
-  ws.onmessage = onMessage;
-  ws.onclose = onClose;
-}
-
-function onMessage(e) {
-  if (e.data === "reload") {
-    location.reload();
-  }
-}
-
-function onClose(e) {
-  console.warn("WebSocket disconnected from server. Reconnecting in 10 seconds.");
-  setTimeout(connect, 10000)
-}
-</script>
