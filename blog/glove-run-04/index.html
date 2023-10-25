@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="https://r4z4.github.io/global.css">
+  <link rel="stylesheet" href="https://r4z4.github.io/markdown.css">
+  <title>MyBlog</title>
+</head>
+
+<body>
+  <section class="section">
+    <div class="container">
+      
+<h1 class="title">
+  GloVe Run 04
+</h1>
+<p class="subtitle"><strong>2023-08-16</strong></p>
+<p>This will be the final run here with the GloVe embeddings and the last stage in the augmentation. So far we have not really seen to much improvement and I anticipate that will be the case here, but nevertheless let's go ahead and complete the cycle.</p>
+<hr />
+<pre data-lang="python" class="language-python "><code class="language-python" data-lang="python">import numpy as np
+import regex as re
+import pandas as pd
+from tqdm.notebook import tqdm
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn import preprocessing
+from sklearn.model_selection import train_test_split
+import utils
+
+import keras
+import tensorflow as tf
+from keras.preprocessing.text import Tokenizer
+from keras.utils import pad_sequences
+</code></pre>
+<pre data-lang="python" class="language-python "><code class="language-python" data-lang="python">df = pd.read_pickle(&#x27;.&#x2F;data&#x2F;dataframes&#x2F;outer_merged_normalized_deduped.pkl&#x27;)
+df.head()
+</code></pre>
+<hr />
+<pre data-lang="python" class="language-python "><code class="language-python" data-lang="python">all_categories = [&#x27;sport&#x27;, &#x27;autos&#x27;, &#x27;religion&#x27;, &#x27;comp_elec&#x27;, &#x27;sci_med&#x27;, &#x27;seller&#x27;, &#x27;politics&#x27;]
+# We&#x27;ll use all
+target_categories = [&#x27;sport&#x27;, &#x27;autos&#x27;, &#x27;religion&#x27;, &#x27;comp_elec&#x27;, &#x27;sci_med&#x27;, &#x27;seller&#x27;, &#x27;politics&#x27;]
+</code></pre>
+<h3 id="augment-our-data">Augment our data</h3>
+<pre data-lang="python" class="language-python "><code class="language-python" data-lang="python"># But still need to fit the tokenizer on our original text to keep same vocak
+max_tokens = 50 
+X = np.array([subject for subject in df[&#x27;subject&#x27;]])
+tokenizer = Tokenizer()
+tokenizer.fit_on_texts(X)
+</code></pre>
+<pre data-lang="python" class="language-python "><code class="language-python" data-lang="python">df[&#x27;subject&#x27;] = df[&#x27;subject&#x27;].apply(lambda x: utils.insert_rejoin(x))
+</code></pre>
+<pre data-lang="python" class="language-python "><code class="language-python" data-lang="python"># container for sentences
+X = np.array([subject for subject in df[&#x27;subject&#x27;]])
+# container for sentences
+y = np.array([subject for subject in df[&#x27;newsgroup&#x27;]])
+</code></pre>
+<pre data-lang="python" class="language-python "><code class="language-python" data-lang="python">encoder = preprocessing.LabelEncoder()
+y = encoder.fit_transform(df[&#x27;newsgroup&#x27;])
+</code></pre>
+<pre data-lang="python" class="language-python "><code class="language-python" data-lang="python">X_train, X_test, y_train, y_test = train_test_split(X, y,
+                                                    stratify=y, 
+                                                    test_size=0.25)
+
+classes = np.unique(y_train)
+mapping = dict(zip(classes, target_categories))
+
+len(X_train), len(X_test), classes, mapping
+</code></pre>
+<pre><code>(6359,
+ 2120,
+ array([0, 1, 2, 3, 4, 5, 6]),
+ {0: &#x27;sport&#x27;,
+  1: &#x27;autos&#x27;,
+  2: &#x27;religion&#x27;,
+  3: &#x27;comp_elec&#x27;,
+  4: &#x27;sci_med&#x27;,
+  5: &#x27;seller&#x27;,
+  6: &#x27;politics&#x27;})
+</code></pre>
+<pre data-lang="python" class="language-python "><code class="language-python" data-lang="python">## Vectorizing data to keep 50 words per sample.
+X_train_vect = pad_sequences(tokenizer.texts_to_sequences(X_train), maxlen=max_tokens, padding=&quot;post&quot;, truncating=&quot;post&quot;, value=0.)
+X_test_vect  = pad_sequences(tokenizer.texts_to_sequences(X_test), maxlen=max_tokens, padding=&quot;post&quot;, truncating=&quot;post&quot;, value=0.)
+
+print(X_train_vect[:3])
+
+X_train_vect.shape, X_test_vect.shape
+</code></pre>
+<pre><code>[[ 921  808   10 1301 1268    0    0    0    0    0    0    0    0    0
+     0    0    0    0    0    0    0    0    0    0    0    0    0    0
+     0    0    0    0    0    0    0    0    0    0    0    0    0    0
+     0    0    0    0    0    0    0    0]
+ [6123   19 1241    0    0    0    0    0    0    0    0    0    0    0
+     0    0    0    0    0    0    0    0    0    0    0    0    0    0
+     0    0    0    0    0    0    0    0    0    0    0    0    0    0
+     0    0    0    0    0    0    0    0]
+ [  26 8243 8244  239    0    0    0    0    0    0    0    0    0    0
+     0    0    0    0    0    0    0    0    0    0    0    0    0    0
+     0    0    0    0    0    0    0    0    0    0    0    0    0    0
+     0    0    0    0    0    0    0    0]]
+
+
+
+((6359, 50), (2120, 50))
+</code></pre>
+<pre data-lang="python" class="language-python "><code class="language-python" data-lang="python"># Should match previous runs
+print(&quot;Vocab Size : {}&quot;.format(len(tokenizer.word_index)))
+</code></pre>
+<pre><code>Vocab Size : 9734
+</code></pre>
+<pre data-lang="python" class="language-python "><code class="language-python" data-lang="python">path = &#x27;.&#x2F;glove.6B.50d.txt&#x27;
+glove_embeddings = {}
+with open(path) as f:
+    for line in f:
+        try:
+            line = line.split()
+            glove_embeddings[line[0]] = np.array(line[1:], dtype=np.float32)
+        except:
+            continue
+</code></pre>
+<pre data-lang="python" class="language-python "><code class="language-python" data-lang="python">embed_len = 50
+
+word_embeddings = np.zeros((len(tokenizer.index_word)+1, embed_len))
+
+for idx, word in tokenizer.index_word.items():
+    word_embeddings[idx] = glove_embeddings.get(word, np.zeros(embed_len))
+</code></pre>
+<pre data-lang="python" class="language-python "><code class="language-python" data-lang="python">word_embeddings[1][:10]
+</code></pre>
+<pre><code>array([ 0.15272   ,  0.36181   , -0.22168   ,  0.066051  ,  0.13029   ,
+        0.37075001, -0.75874001, -0.44722   ,  0.22563   ,  0.10208   ])
+</code></pre>
+<hr />
+<h3 id="approach-1-glove-embeddings-flattened-max-tokens-50-embedding-length-300">Approach 1: GloVe Embeddings Flattened (Max Tokens=50, Embedding Length=300)</h3>
+<h3 id="load-previously-trained-model">Load previously trained model</h3>
+<hr />
+<pre data-lang="python" class="language-python "><code class="language-python" data-lang="python"># Load model
+model_file = &#x27;models&#x2F;sparse_cat_entire&#x27;
+model = keras.models.load_model(model_file)
+model.summary()
+</code></pre>
+<pre><code>Model: &quot;SparseCategoricalEntireData&quot;
+_________________________________________________________________
+ Layer (type)                Output Shape              Param #   
+=================================================================
+ embedding (Embedding)       (None, 50, 50)            486750    
+                                                                 
+ flatten (Flatten)           (None, 2500)              0         
+                                                                 
+ dense (Dense)               (None, 128)               320128    
+                                                                 
+ dense_1 (Dense)             (None, 64)                8256      
+                                                                 
+ dense_2 (Dense)             (None, 7)                 455       
+                                                                 
+=================================================================
+Total params: 815,589
+Trainable params: 328,839
+Non-trainable params: 486,750
+_________________________________________________________________
+</code></pre>
+<pre data-lang="python" class="language-python "><code class="language-python" data-lang="python">model.weights[0][1][:10], word_embeddings[1][:10]
+</code></pre>
+<pre><code>(&lt;tf.Tensor: shape=(10,), dtype=float32, numpy=
+ array([ 0.15272 ,  0.36181 , -0.22168 ,  0.066051,  0.13029 ,  0.37075 ,
+        -0.75874 , -0.44722 ,  0.22563 ,  0.10208 ], dtype=float32)&gt;,
+ array([ 0.15272   ,  0.36181   , -0.22168   ,  0.066051  ,  0.13029   ,
+         0.37075001, -0.75874001, -0.44722   ,  0.22563   ,  0.10208   ]))
+</code></pre>
+<pre data-lang="python" class="language-python "><code class="language-python" data-lang="python">model.fit(X_train_vect, y_train, batch_size=32, epochs=8, validation_data=(X_test_vect, y_test))
+</code></pre>
+<pre><code>Epoch 1&#x2F;8
+199&#x2F;199 [==============================] - 2s 7ms&#x2F;step - loss: 0.8248 - accuracy: 0.7789 - val_loss: 0.6934 - val_accuracy: 0.7896
+Epoch 2&#x2F;8
+199&#x2F;199 [==============================] - 1s 6ms&#x2F;step - loss: 0.4073 - accuracy: 0.8800 - val_loss: 0.7078 - val_accuracy: 0.7953
+Epoch 3&#x2F;8
+199&#x2F;199 [==============================] - 1s 6ms&#x2F;step - loss: 0.2645 - accuracy: 0.9291 - val_loss: 0.7498 - val_accuracy: 0.7929
+Epoch 4&#x2F;8
+199&#x2F;199 [==============================] - 1s 6ms&#x2F;step - loss: 0.1771 - accuracy: 0.9530 - val_loss: 0.8251 - val_accuracy: 0.7816
+Epoch 5&#x2F;8
+199&#x2F;199 [==============================] - 2s 10ms&#x2F;step - loss: 0.1199 - accuracy: 0.9734 - val_loss: 0.8772 - val_accuracy: 0.7788
+Epoch 6&#x2F;8
+199&#x2F;199 [==============================] - 2s 11ms&#x2F;step - loss: 0.0815 - accuracy: 0.9847 - val_loss: 0.9525 - val_accuracy: 0.7722
+Epoch 7&#x2F;8
+199&#x2F;199 [==============================] - 2s 9ms&#x2F;step - loss: 0.0632 - accuracy: 0.9888 - val_loss: 1.0143 - val_accuracy: 0.7764
+Epoch 8&#x2F;8
+199&#x2F;199 [==============================] - 1s 6ms&#x2F;step - loss: 0.0497 - accuracy: 0.9904 - val_loss: 1.0631 - val_accuracy: 0.7726
+
+
+&lt;keras.callbacks.History at 0x7f3cbd595130&gt;
+</code></pre>
+<pre data-lang="python" class="language-python "><code class="language-python" data-lang="python">from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
+
+y_preds = model.predict(X_test_vect).argmax(axis=-1)
+
+print(&quot;Test Accuracy : {}&quot;.format(accuracy_score(y_test, y_preds)))
+print(&quot;\nClassification Report : &quot;)
+print(classification_report(y_test, y_preds, target_names=target_categories))
+print(&quot;\nConfusion Matrix : &quot;)
+print(confusion_matrix(y_test, y_preds))
+</code></pre>
+<pre><code>67&#x2F;67 [==============================] - 1s 7ms&#x2F;step
+Test Accuracy : 0.7726415094339623
+
+Classification Report : 
+              precision    recall  f1-score   support
+
+       sport       0.65      0.59      0.62       189
+       autos       0.83      0.88      0.85       901
+    religion       0.73      0.65      0.69       220
+   comp_elec       0.70      0.77      0.73       179
+     sci_med       0.73      0.68      0.70       192
+      seller       0.72      0.71      0.71       221
+    politics       0.81      0.76      0.78       218
+
+    accuracy                           0.77      2120
+   macro avg       0.74      0.72      0.73      2120
+weighted avg       0.77      0.77      0.77      2120
+
+
+Confusion Matrix : 
+[[112  35  11   6   7  14   4]
+ [ 19 794   6  15  24  26  17]
+ [ 11  21 143  24   7   3  11]
+ [  3  13  15 138   3   4   3]
+ [  8  33   9   8 130   2   2]
+ [ 13  44   2   2   3 156   1]
+ [  6  18   9   4   4  12 165]]
+</code></pre>
+<pre data-lang="python" class="language-python "><code class="language-python" data-lang="python"># TensorFlow SavedModel format =&gt; .keras
+model_file = &#x27;models&#x2F;sparse_cat_entire&#x27;
+model.save(model_file)
+</code></pre>
+<pre data-lang="python" class="language-python "><code class="language-python" data-lang="python">!pip install scikit-plot
+from sklearn.metrics import confusion_matrix
+import scikitplot as skplt
+import matplotlib.pyplot as plt
+import numpy as np
+
+skplt.metrics.plot_confusion_matrix([target_categories[i] for i in y_test], [target_categories[i] for i in y_preds],
+                                    normalize=True,
+                                    title=&quot;Confusion Matrix&quot;,
+                                    cmap=&quot;Greens&quot;,
+                                    hide_zeros=True,
+                                    figsize=(5,5)
+                                    );
+plt.xticks(rotation=90);
+</code></pre>
+<hr />
+<p><img src="/assets/images/glove/run_04.png#img-thumbnail" alt="png" /></p>
+<h3 id="custom-test">Custom Test</h3>
+<hr />
+<pre data-lang="python" class="language-python "><code class="language-python" data-lang="python"># define documents
+docs = [&#x27;Democrats the Reuplicans are both the worst!&#x27;,
+&#x27;Coyotes win 10-0&#x27;,
+&#x27;Houston Astros defeat the Cubs&#x27;,
+&#x27;Apple and Microsoft both make great computers&#x27;,
+&#x27;New washer 4sale. $200&#x27;]
+
+doc_array = np.array(docs)
+
+doc_array_vect  = pad_sequences(tokenizer.texts_to_sequences(doc_array), maxlen=max_tokens, padding=&quot;post&quot;, truncating=&quot;post&quot;, value=0.)
+
+cstm_test_preds = model.predict(doc_array_vect).argmax(axis=-1)
+</code></pre>
+<pre><code>1&#x2F;1 [==============================] - 0s 179ms&#x2F;step
+</code></pre>
+<pre data-lang="python" class="language-python "><code class="language-python" data-lang="python">print(doc_array)
+</code></pre>
+<pre><code>[&#x27;Democrats the Reuplicans are both the worst!&#x27; &#x27;Coyotes win 10-0&#x27;
+ &#x27;Houston Astros defeat the Cubs&#x27;
+ &#x27;Apple and Microsoft both make great computers&#x27; &#x27;New washer 4sale. $200&#x27;]
+</code></pre>
+<pre data-lang="python" class="language-python "><code class="language-python" data-lang="python">print(doc_array_vect)
+</code></pre>
+<pre><code>[[   2   53 3716    2 1299    0    0    0    0    0    0    0    0    0
+     0    0    0    0    0    0    0    0    0    0    0    0    0    0
+     0    0    0    0    0    0    0    0    0    0    0    0    0    0
+     0    0    0    0    0    0    0    0]
+ [  69  199   47    0    0    0    0    0    0    0    0    0    0    0
+     0    0    0    0    0    0    0    0    0    0    0    0    0    0
+     0    0    0    0    0    0    0    0    0    0    0    0    0    0
+     0    0    0    0    0    0    0    0]
+ [2931 4257    2 1113    0    0    0    0    0    0    0    0    0    0
+     0    0    0    0    0    0    0    0    0    0    0    0    0    0
+     0    0    0    0    0    0    0    0    0    0    0    0    0    0
+     0    0    0    0    0    0    0    0]
+ [ 124    3  461 3716  277  580 1149    0    0    0    0    0    0    0
+     0    0    0    0    0    0    0    0    0    0    0    0    0    0
+     0    0    0    0    0    0    0    0    0    0    0    0    0    0
+     0    0    0    0    0    0    0    0]
+ [  27  842  542    0    0    0    0    0    0    0    0    0    0    0
+     0    0    0    0    0    0    0    0    0    0    0    0    0    0
+     0    0    0    0    0    0    0    0    0    0    0    0    0    0
+     0    0    0    0    0    0    0    0]]
+</code></pre>
+<pre data-lang="python" class="language-python "><code class="language-python" data-lang="python">print(cstm_test_preds)
+</code></pre>
+<pre><code>[2 1 6 1 1]
+</code></pre>
+
+
+    </div>
+  </section>
+</body>
+
+</html>
