@@ -1,0 +1,144 @@
+.md-body{
+    background-color: #f6f0f0;
+    border: solid 1px white;
+    font-family: 'Open Sans', sans-serif;
+    width: 80%;
+    padding: 1px;
+    margin: 10px auto;
+    border-radius: 20px;
+  }
+  
+  .md-body p, h4, h2 {
+    margin: 0px 4%;
+  }
+  
+  .md-body h3 {
+    text-align: center;
+  }
+  
+  .md-body blockquote {
+      font: 14px/22px normal helvetica, sans-serif;
+      font-style: italic;
+      margin-top: 2%;
+      margin-bottom: 2%;
+      margin-left: 8%;
+      border-left: 3px solid #ccc;
+    }
+  
+  .md-body blockquote p {
+    margin: 0px 2%;
+  }
+  
+  .md-body a {
+    color: rgb(21, 11, 67);
+  }
+  
+  .md-body a:visited {
+    color: rgb(123, 22, 123);
+  }
+  
+  .md-body h1 {
+    text-align: center;
+  }
+  
+  .md-body hr {
+    width: 80%;
+  }
+  
+  .md-body div {
+    margin: auto;
+  }
+  
+  .md-body ul {
+    margin-top: 1em;
+    margin-bottom: 1em;
+    list-style: disc outside none;
+  }
+  
+  .md-body ul li {
+    margin-left: 2em;
+    display: list-item;
+    text-align: -webkit-match-parent;
+  }
+  
+  .rsh {
+    font-size: 50%;
+  }
+  
+  .md-body table {
+    font-size: 90%;
+    font-family: 'Lucidia Console', Monaco, monospace;
+    margin: auto;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
+  }
+  
+  .md-body tbody tr th:only-of-type {
+    vertical-align:middle;
+  }
+  
+  .md-body tbody tr th {
+    vertical-align:top;
+  }
+  
+  .md-body thead th {
+    text-align:right;
+  }
+  
+  .md-body tbody tr:nth-child(odd) {
+    background-color: #fff;
+  }
+  
+  .md-body tbody tr:nth-child(even) {
+    background-color: #eee;
+  }
+  
+  .md-body thead {
+    background-color: #333;
+    color: white;
+  }
+  
+  .md-body tr {
+    text-align:right;
+  }
+  
+  .md-body td {
+    padding: 0 5px;
+  }
+  
+  .mmd-body img {
+    width: 75%;
+  }
+  
+  .md-body img[src$='#img-thumbnail'] { 
+    border:2px solid white;
+    display: inherit;
+    width: 30%;
+    height: auto;
+    margin: 4% auto;
+  }
+  
+  .md-body img[src$='#md-img-bright'] { 
+    display: inherit;
+    width: 20%;
+    height: auto;
+    margin: 1% auto;
+    filter: brightness(0.6);
+  }
+  
+  .md-body img[src$='#md-img'] { 
+    display: inherit;
+    width: 20%;
+    height: auto;
+    margin: 1% auto;
+  }
+  
+  .md-body img[src$='#md-img-inline'] { 
+    display: inline;
+    width: 20%;
+    height: auto;
+    margin: 1% auto;
+  }
+  
+  .md-body img[src$='#wordcloud'] { 
+    width: 30%;
+  }

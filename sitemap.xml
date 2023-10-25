@@ -1,33 +1,33 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
-        <loc>https://r4z4.github.io/</loc>
+        <loc>https://r4z4.github.io/serum/</loc>
     </url>
     <url>
-        <loc>https://r4z4.github.io/blog/</loc>
+        <loc>https://r4z4.github.io/serum/blog/</loc>
     </url>
     <url>
-        <loc>https://r4z4.github.io/blog/first/</loc>
+        <loc>https://r4z4.github.io/serum/blog/first/</loc>
         <lastmod>2019-11-27</lastmod>
     </url>
     <url>
-        <loc>https://r4z4.github.io/blog/glove-run-01/</loc>
+        <loc>https://r4z4.github.io/serum/blog/glove-run-01/</loc>
         <lastmod>2023-08-16</lastmod>
     </url>
     <url>
-        <loc>https://r4z4.github.io/blog/glove-run-02/</loc>
+        <loc>https://r4z4.github.io/serum/blog/glove-run-02/</loc>
         <lastmod>2023-08-16</lastmod>
     </url>
     <url>
-        <loc>https://r4z4.github.io/blog/glove-run-03/</loc>
+        <loc>https://r4z4.github.io/serum/blog/glove-run-03/</loc>
         <lastmod>2023-08-16</lastmod>
     </url>
     <url>
-        <loc>https://r4z4.github.io/blog/glove-run-04/</loc>
+        <loc>https://r4z4.github.io/serum/blog/glove-run-04/</loc>
         <lastmod>2023-08-16</lastmod>
     </url>
     <url>
-        <loc>https://r4z4.github.io/blog/second/</loc>
+        <loc>https://r4z4.github.io/serum/blog/second/</loc>
         <lastmod>2019-11-28</lastmod>
     </url>
 </urlset>
